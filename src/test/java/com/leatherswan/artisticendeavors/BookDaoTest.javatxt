@@ -1,0 +1,483 @@
+package com.leatherswan.artisticendeavors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import com.leatherswan.artisticendeavors.enums.GenreType;
+import com.leatherswan.artisticendeavors.model.Author;
+import com.leatherswan.artisticendeavors.model.Item;
+import com.leatherswan.artisticendeavors.model.Genre;
+import com.leatherswan.artisticendeavors.dao.ItemDao;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+
+import javax.annotation.Resource;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+
+/**
+ * repeatable.
+ */
+@RunWith(SpringJUnit4ClassRunner.class)
+// @EnableJpaRepositories
+@ContextConfiguration(locations = { "classpath:/app-spring.xml",
+		"classpath:/datasource-jpa-embedded.xml" })
+// "classpath:/datasource-test.xml" })
+@TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = false)
+public class BookDaoTest extends AbstractTransactionalJUnit4SpringContextTests {
+
+	/** The em. */
+	@PersistenceContext
+	private EntityManager em;
+
+	/** The Constant log. */
+	static final Logger log = LoggerFactory.getLogger(BookDaoTest.class);
+
+	/** The book dao. */
+	@Resource
+	private ItemDao bookDao;
+
+	/* (non-Javadoc)
+	 * @see org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests#setDataSource(javax.sql.DataSource)
+	 */
+	@Override
+	@Resource(name = "dataSource")
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	/**
+	 * Sets the up.
+	 *
+	 * @throws Exception the exception
+	 */
+	@Before
+	public void setUp() throws Exception {
+
+		// for embedded derby test comment sql lines
+		// for client derby test uncomment sql lines
+
+		// boolean continueOnErrorTrue = true;
+		// boolean continueOnErrorFalse = false;
+		// executeSqlScript("classpath:book_create.sql", continueOnErrorTrue);
+		// executeSqlScript("classpath:book_insert.sql", continueOnErrorFalse);
+		// executeSqlScript("classpath:user_create.sql", continueOnErrorTrue);
+
+		// provide author and genre links for DAO books
+
+		// List<String> listOfIsbn = new LinkedList<String>();
+		// List<String> listOfAuthor = new LinkedList<String>();
+		// List<String> listOfGenre = new LinkedList<String>();
+		//
+		// listOfIsbn.add("978-0441569595"); //7
+		// listOfAuthor.add("Gibson"); //11
+		// listOfGenre.add("sci-fi"); //3
+		// listOfIsbn.add("978-0553293357"); //8
+		// listOfAuthor.add("Asimov"); //12
+		// listOfGenre.add("sci-fi"); //3
+		// listOfIsbn.add("978-0553380163"); //9
+		// listOfAuthor.add("Hawking"); //13
+		// listOfGenre.add("non-fiction"); //4
+		// listOfIsbn.add("978-0137081897"); //10
+		// listOfAuthor.add("Horstmann"); //14
+		// listOfGenre.add("non-fiction"); //4
+		// listOfIsbn.add("978-0137081897"); //10
+		// listOfAuthor.add("Cornell"); //15
+		// listOfGenre.add("non-fiction"); //4
+		// listOfIsbn.add("978-0137081899"); //11
+		// listOfAuthor.add("Melville"); //16
+		// listOfGenre.add("classic"); //2
+		// listOfIsbn.add("978-0812550706"); //12
+		// listOfAuthor.add("Card"); //17
+		// listOfGenre.add("sci-fi"); //3
+		// listOfIsbn.add("978-0316769487"); //13
+		// listOfAuthor.add("Salinger"); //18
+		// listOfGenre.add("classic"); //2
+		// listOfIsbn.add("978-0618260307"); //14
+		// listOfAuthor.add("Tolkien"); //19
+		// listOfGenre.add("fantasy"); //1
+		//
+		// for (int i = 0; i < listOfIsbn.size(); i++) {
+		//
+		// List<Author> bookAuthors = null;
+		// Genre bookGenre = new Genre();
+		// Book book = null;
+		//
+		// book = bookDao.findBookByIsbn(listOfIsbn.get(i));
+		// bookAuthors = bookDao.findAuthorByLastname(listOfAuthor.get(i));
+
+		// assume no duplicate author last names for this excercise
+
+		// if(bookAuthors != null) {
+		// book.addAuthor(bookAuthors.get(0));
+		// }
+
+		// find DAO entry for book genre
+
+		// Genre genreAdd = bookDao.findGenreByType(listOfGenre.get(i));
+
+		// if genre
+
+		// if (genreAdd == null) {
+		// bookGenre.setGenreType(listOfGenre.get(i));
+		// }
+		// book.setGenre(genreAdd);
+		//
+		// bookDao.updateBook(book);
+		//
+		// }
+		outputLogStatus("SETUP");
+	}
+
+	/**
+	 * Output log status.
+	 *
+	 * @param string the string
+	 */
+	public void outputLogStatus(String string) {
+		log.info("TEST " + string + ": ");
+		log.info("#Books(" + bookDao.countItems() + ") #Authors("
+				+ bookDao.countAuthors() + ") #Genre(" + bookDao.countGenreTypes()
+				+ ") #Reviews(" + bookDao.countReview() + ")");
+	}
+
+	/**
+	 * Find book by isbn.
+	 */
+	@Test
+	public void findBookByIsbn() {
+
+		String findIsbn = "978-0441569595";
+		String expectedTitle = "Neuromancer";
+		log.info("finding Book " + findIsbn);
+		Item book = bookDao.findItemByIsbn(findIsbn);
+		log.info("foundBook " + book);
+		assertNotNull(book);
+		assertEquals(expectedTitle, book.getTitle());
+		outputLogStatus("findBookByIsbn");
+	}
+
+	/**
+	 * Find books by genre.
+	 */
+	@Test
+	public void findBooksByGenre() {
+
+		GenreType findGenre = bookDao.findGenreByType(GenreType.classic);
+		assertNotNull(findGenre);
+		List<Item> books = bookDao.findItemsByGenreType(GenreType.classic);
+		assertNotNull(books);
+		assertEquals(books.size(), 2);
+		outputLogStatus("findBooksByGenre");
+	}
+
+	/**
+	 * Find authors per book.
+	 */
+	@Test
+	public void findAuthorsPerBook() {
+		String isbn1 = "978-0137081897";
+		Integer isbn1NumAuthors = 2;
+		String isbn2 = "978-0-7645-7483-2";
+		Integer isbn2NumAuthors = 5;
+		
+		Item book1 = bookDao.findItemByIsbn(isbn1);
+		List<Author> findAuthors1 = bookDao
+				.findAuthorsByItemIsbn(book1.getIsbn());
+		assertNotNull(findAuthors1);
+		assertTrue(findAuthors1.size() == isbn1NumAuthors);
+		log.info("Authors of book (" + book1.getTitle() + ") ISBN("
+				+ book1.getIsbn() + ")");
+		for (Author author : findAuthors1) {
+			log.info(author.getFirstname() + " " + author.getLastname());
+		}
+
+		Item book2 = bookDao.findItemByIsbn(isbn2);
+		List<Author> findAuthors2 = bookDao
+				.findAuthorsByItemIsbn(book2.getIsbn());
+		assertNotNull(findAuthors2);
+		assertTrue(findAuthors2.size() == isbn2NumAuthors);
+		log.info("Authors of book (" + book2.getTitle() + ") ISBN("
+				+ book2.getIsbn() + ")");
+		for (Author author : findAuthors2) {
+			log.info(author.getFirstname() + " " + author.getLastname());
+		}
+}
+
+	/**
+	 * Find books per author.
+	 */
+	@Test
+	public void findBooksPerAuthor() {
+		String authorLastname1 = "Johnson";
+		Integer author1NumBooks = 2;
+		String authorLastname2 = "Cornell";
+		Integer author2NumBooks = 1;
+		
+		Author author1 = bookDao.findAuthorByLastname(authorLastname2);
+		assertTrue(author1 != null);
+		List<Item> findBooks1 = bookDao.findItemsByAuthorLastname(authorLastname1);
+		assertNotNull(findBooks1);
+		assertTrue(findBooks1.size() == author1NumBooks);
+		log.info("Books by Author (" + authorLastname1 + ")");
+		for (Item book1 : findBooks1) {
+			log.info(book1.getTitle() + " (ISBN="
+					+ book1.getIsbn() + ")");
+		}
+
+		Author author2 = bookDao.findAuthorByLastname(authorLastname2);
+		assertTrue(author2 != null);
+		List<Item> findBooks2 = bookDao.findItemsByAuthorLastname(authorLastname2);
+		assertNotNull(findBooks2);
+		assertTrue(findBooks2.size() == author2NumBooks);
+		log.info("Books by Author (" + authorLastname2 + ")");
+		for (Item book2 : findBooks2) {
+			log.info(book2.getTitle() + " (ISBN="
+					+ book2.getIsbn() + ")");
+		}
+}
+
+	/**
+	 * Find books per genre.
+	 */
+	@Test
+	public void findNumBooksPerGenreMostFirst() {
+
+		List<Object[]> findGenreNum = bookDao.findItemsPerGenre();
+		assertNotNull(findGenreNum);
+		Object[] findFirstGenreNum = findGenreNum.get(0);
+		assertEquals(findFirstGenreNum[0], GenreType.nonfiction);
+		assertEquals(findFirstGenreNum[1].toString(), "7");
+		for (Object[] list : findGenreNum) {
+			log.info(list[0].toString() + "(" + list[1].toString() + ")");
+		}
+	}
+
+	/**
+	 * Creates the book.
+	 */
+	@Test
+	public void createBook() {
+		String newIsbn = "987-6543212345";
+		String expectedTitle = "btest";
+
+		Author author = new Author();
+		author.setLastname("Bob");
+		List<Author> authors = new LinkedList<Author>();
+		authors.add(author);
+
+		Genre genre = new Genre();
+		genre.setGenreType(GenreType.scifi);
+
+		Item book = new Item();
+		book.setIsbn(newIsbn);
+		book.setTitle(expectedTitle);
+		book.setDescription("Test");
+		book.setPrice(99.99);
+
+		bookDao.saveItem(book);
+
+		book.setAuthors(authors);
+		book.setGenre(genre);
+
+		Item foundBook = bookDao.findItemByIsbn(newIsbn);
+//		if book already in db due to previous test session...
+		if (foundBook != null) {
+			bookDao.deleteItem(foundBook);
+		}
+		bookDao.saveItem(book);
+
+		foundBook = bookDao.findItemByIsbn(newIsbn);
+		assertNotNull(foundBook);
+		assertEquals(expectedTitle, foundBook.getTitle());
+
+		outputLogStatus("createBook");
+	}
+
+	/**
+	 * Read book.
+	 */
+	@Test
+	public void readBook() {
+
+		String isbn = "978-0553293357";
+		Item book = bookDao.findItemByIsbn(isbn);
+		log.info("foundBook " + book);
+		assertNotNull(book);
+		assertNotNull(book.getAuthors());
+
+		outputLogStatus("readBook");
+	}
+
+	/**
+	 * Update name of book.
+	 */
+	@Test
+	public void updateNameOfBook() {
+		String isbn = "978-0553293357";
+		String newTitle = "Found Nation";
+
+		Item originalTitle = em
+				.createQuery(
+						"SELECT b FROM Book b WHERE b.isbn LIKE :findisbn",
+						Item.class).setParameter("findisbn", isbn)
+				.getSingleResult();
+		//
+		// check initial state
+		//
+		assertEquals(originalTitle.getTitle(), "Foundation");
+
+		// Book book = new Book.Builder().isbn(isbn).title(newTitle).build();
+		Item book = originalTitle;
+		book.setTitle(newTitle);
+		//
+		// update !
+		//
+		bookDao.updateItemByItemIsbn(book);
+
+		Item updatedTitle = em
+				.createQuery(
+						"SELECT b FROM Book b WHERE b.isbn LIKE :findisbn",
+						Item.class).setParameter("findisbn", isbn)
+				.getSingleResult();
+
+		//
+		// verify results
+		//
+		assertEquals(newTitle, updatedTitle.getTitle());
+
+		outputLogStatus("updateNameOfBook");
+	}
+
+	/**
+	 * Delete temp book.
+	 */
+	@Test
+	public void deleteTempBook() {
+
+		//
+		// Create a book
+		//
+		String isbn = "111-2223334445";
+		String ti = "unittest";
+		String de = "To boldly go where others fear to tread, take an angel.";
+		Author au = new Author();
+		au.setLastname("Stramski");
+		Genre ge = new Genre();
+		ge.setGenreType(GenreType.nonfiction);
+		double pr = 99.99;
+		String pu = "NewAge";
+		double di = 0.0;
+
+		Item book = new Item.Builder().isbn(isbn).title(ti).description(de)
+				.author(au).price(pr).publisher(pu).discount(di)
+				.build();
+
+		bookDao.saveItem(book);
+		outputLogStatus("deleteTempBook: after createTemp");
+
+		// verify it was persisted
+		//
+		assertNotNull((Integer) em
+				.createQuery(
+						"SELECT b.id " + "FROM Book b "
+								+ "WHERE b.isbn LIKE :findisbn")
+				.setParameter("findisbn", book.getIsbn()).getSingleResult());
+
+		// delete that book based on isbn
+		//
+		// bookDao.deleteBook(book.getIsbn());
+		bookDao.deleteItem(book);
+
+		// verify it's gone
+		//
+		List<String> matchingBooks = em
+				.createQuery(
+						"SELECT b.title FROM Book b "
+								+ "WHERE b.isbn LIKE :findisbn", String.class)
+				.setParameter("findisbn", book.getIsbn()).getResultList();
+		assertEquals(matchingBooks.size(), 0);
+
+		outputLogStatus("deleteTempBook");
+	}
+
+	/**
+	 * Find all.
+	 */
+	@Test
+	public void findAll() {
+		log.info("bookDao " + bookDao);
+		List<Item> books = bookDao.findAllItems();
+		assertNotNull(books);
+		assertTrue(books.size() > 0);
+//		books.forEach(System.out::println);
+
+		outputLogStatus("findAll");
+	}
+
+	/**
+	 * Search books.
+	 */
+	@Test
+	public void searchBooks() {
+
+		List<Item> books;
+
+		Item lookupDescription = new Item();
+		String description = "the";
+		Integer numBooksWithThe = 14;
+
+		lookupDescription.setDescription(description);
+		books = bookDao.searchItemByItemCriteria(lookupDescription);
+		assertNotNull(books);
+		assertTrue(books.size() == numBooksWithThe);
+		books = null;
+
+		Author author = new Author();
+		String authorLastname = "Cornell";
+		author.setLastname(authorLastname);
+		String authorsBookIsbn = "978-0137081897";
+		Integer numBooksByAuthor = 1;
+
+		books = bookDao.searchItemByAuthorCriteria(author);
+		assertNotNull(books);
+		assertTrue(books.size() == numBooksByAuthor);
+		assertTrue(books.get(0).getIsbn().equals(authorsBookIsbn));
+		books = null;
+
+		Item lookupISBN = new Item();
+		String fragIsbn = "081255";
+		String fullIsbn = "978-0812550706";
+
+		lookupISBN.setIsbn(fragIsbn);
+		books = bookDao.searchItemByItemCriteria(lookupISBN);
+		assertNotNull(books);
+		assertTrue(books.size() == 1);
+		assertTrue(books.get(0).getIsbn().equals(fullIsbn));
+		books = null;
+
+		Item lookupPrice = new Item();
+		Double price = 12.99;
+		Integer numBooksAtPrice = 2;
+
+		lookupPrice.setPrice(price);
+		books = bookDao.searchItemByItemCriteria(lookupPrice);
+		assertNotNull(books);
+		assertTrue(books.size() == numBooksAtPrice);
+		books = null;
+	}
+
+}

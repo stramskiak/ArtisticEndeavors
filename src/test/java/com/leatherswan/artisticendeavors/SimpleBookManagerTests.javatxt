@@ -1,0 +1,63 @@
+package com.leatherswan.bookstore;
+
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.leatherswan.bookstore.model.Book;
+import com.leatherswan.bookstore.model.SimpleBookManager;
+
+public class SimpleBookManagerTests {
+
+	private static String AUTHOR_NAME = "William Gibson";
+	private static String BOOK_ISBN = "978-0441569595";
+	private static String BOOK_TITLE = "Neuromancer";
+	private static String BOOK_DESCRIPTION = "Case had been the sharpest data-thief in the business, until "
+										  + "vengeful former employees crippled his nervous system. But "
+										  + "now a new and very mysterious employer recruits him for a "
+										  + "last-chance run.";
+	private SimpleBookManager bookManager;
+	private List<Book> newbooks;
+//	private Map<String, Book> books;
+	
+	@Before
+	public void setUp() throws Exception {
+		bookManager = new SimpleBookManager();
+		newbooks = new ArrayList<Book>();
+//		newbooks = new List<Book>();
+	
+		Book book = new Book();
+		book.setIsbn(BOOK_ISBN);
+		book.setTitle(BOOK_TITLE);
+		book.setAuthor(AUTHOR_NAME);
+		book.setDescription(BOOK_DESCRIPTION);
+		newbooks.add(book);
+		
+		bookManager.setBooks(newbooks);
+	}
+
+	@Test
+	public void testGetBooksWithNoBooks() {
+		SimpleBookManager localBookManager = new SimpleBookManager();
+		assertNull(localBookManager.getBooks());
+	}
+
+	@Test
+	public void testGetBooks() {
+//		List<Book> localBooks = bookManager.getBooks();
+		List<Book> localBooks = bookManager.getBooks();
+		assertNotNull(localBooks);
+		assertEquals(newbooks.size(), localBooks.size());
+		
+		// We'll duplicate some of the book and author tests here just
+		// to make sure we got the SAME list back.
+		Book localBook = localBooks.get(0);
+		assertEquals(BOOK_ISBN, localBook.getIsbn());
+		assertEquals(BOOK_TITLE, localBook.getTitle());
+		assertEquals(BOOK_DESCRIPTION, localBook.getDescription());
+		assertEquals(AUTHOR_NAME, localBook.getAuthor());
+	}
+}

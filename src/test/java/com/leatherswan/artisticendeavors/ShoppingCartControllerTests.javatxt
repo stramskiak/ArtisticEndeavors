@@ -1,0 +1,159 @@
+package com.leatherswan.bookstore;
+
+import static org.junit.Assert.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.*;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.leatherswan.bookstore.app.ShoppingCartController;
+import com.leatherswan.bookstore.model.Book;
+import com.leatherswan.bookstore.model.SimpleBookManager;
+import com.leatherswan.bookstore.model.ShoppingCart;
+import com.leatherswan.bookstore.model.User;
+
+@WebAppConfiguration
+@ContextConfiguration(locations = 
+		{"classpath*:*.xml",
+			"file:src/main/webapp/resources/data/books.xml"
+		})
+@ComponentScan(basePackages = {
+		"com.leatherswan.bookapp"
+})
+
+@RunWith(MockitoJUnitRunner.class)
+public class ShoppingCartControllerTests {
+    
+    private MockMvc mockMvc;
+    private MockHttpSession mockSession;
+    
+	@Autowired
+	private SimpleBookManager bookManager;
+	
+    private User user;
+    private ShoppingCart cart;
+    private static final String testName = "momamia";
+    private static final String testPassword = "forever";
+    private static final String testEmail = "theMom@yourHome.net";
+    private static final String testPhoneNumber = "123-987-0987";
+	private static String AUTHOR_NAME = "William Gibson";
+	private static String BOOK_ISBN = "978-0441569595";
+	private static String BOOK_TITLE = "Neuromancer";
+	private static String BOOK_DESCRIPTION = "Case had been the sharpest data-thief in the business, until "
+										  + "vengeful former employees crippled his nervous system. But "
+										  + "now a new and very mysterious employer recruits him for a "
+										  + "last-chance run.";
+	private List<Book> newbooks;
+    private final static Integer testZero = 0;
+    private final static Integer testOne = 1;
+    private final static Integer testTwo = 2;
+    
+    @Before
+    public void setUp() throws Exception {
+//        mockMvc = MockMvcBuilders.webAppContextSetup(context);
+        mockMvc = MockMvcBuilders.standaloneSetup(new ShoppingCartController()).build();
+        mockSession = new MockHttpSession(null, UUID.randomUUID().toString());
+
+        user = new User();
+        user.setUsername(testUsername);
+        user.setPassword(testPassword);
+
+        mockSession.setAttribute("user", user);
+        mockSession.setAttribute("username", testName);
+
+        cart = new ShoppingCart();
+        cart.setUsername(testName);
+        mockSession.setAttribute("cart", cart);
+
+		bookManager = new SimpleBookManager();
+		newbooks = new ArrayList<Book>();
+	
+		Book book = new Book();
+		book.setIsbn(BOOK_ISBN);
+		book.setTitle(BOOK_TITLE);
+		book.setAuthor(AUTHOR_NAME);
+		book.setDescription(BOOK_DESCRIPTION);
+		newbooks.add(book);
+		
+		bookManager.setBooks(newbooks);
+    }
+
+    @Test
+    public void testShowCart() throws Exception {
+        mockMvc.perform(get("/gotocart"))
+               .andExpect(status().is3xxRedirection())
+               .andExpect(view().name("redirect:/"))
+               .andExpect(model().attributeExists("cart"));
+    }
+    
+
+    @Test
+    public void testAddToCart() throws Exception {
+        mockMvc.perform(put("addtocart").session(mockSession)
+        									.param("isbn", BOOK_ISBN))
+               .andExpect(status().isOk());
+        
+        assertNotNull(mockSession.getAttribute("cart"));
+        assertTrue(mockSession.getAttribute("cart") instanceof ShoppingCart);
+        ShoppingCart thisCart = (ShoppingCart) mockSession.getAttribute("cart");
+
+        assertEquals(thisCart.numCartItems(), testOne);
+        assertEquals(thisCart.getCartItem(BOOK_ISBN).getBook().getTitle(), BOOK_TITLE);
+  }
+    
+//    @Test
+//    public void testRemoveFromCart() throws Exception {
+//        mockMvc.perform(get("decrementQuantity").session(mockSession)
+//        		.param("isbn", BOOK_ISBN))
+//               .andExpect(status().isOk());
+//        
+//        assertNotNull(mockSession.getAttribute("cart"));
+//        assertTrue(mockSession.getAttribute("cart") instanceof ShoppingCart);
+//    }
+    
+    private static String testUsername = "name";
+    
+    @Test
+    public void testDecrementQuantity() throws Exception {
+        MockHttpServletRequestBuilder srb = 
+        		post("decrementQuantity").session(mockSession).param("isbn", BOOK_ISBN);
+        mockMvc.perform(srb).andExpect(status().isOk());
+        
+        assertNotNull(mockSession.getAttribute("cart"));
+        assertTrue(mockSession.getAttribute("cart") instanceof ShoppingCart);
+        
+        ShoppingCart cart = (ShoppingCart) mockSession.getAttribute("cart");
+        assertEquals(cart.getUsername(), testUsername);
+    }
+
+    @Test
+    public void testIncrementQuantity() throws Exception {
+        MockHttpServletRequestBuilder srb = post("incrementQuantity").session(mockSession)
+        		.param("isbn", BOOK_ISBN);
+        mockMvc.perform(srb)
+               .andExpect(status().isOk());
+        
+        assertNotNull(mockSession.getAttribute("userInfo"));
+        assertTrue(mockSession.getAttribute("userInfo") instanceof User);
+        
+        ShoppingCart cart = (ShoppingCart) mockSession.getAttribute("cart");
+        assertEquals(cart.getUsername(), testUsername);
+    }
+    
+}

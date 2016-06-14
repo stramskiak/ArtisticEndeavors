@@ -1,0 +1,230 @@
+package com.leatherswan.artisticendeavors;
+
+import org.junit.*;
+import org.junit.runner.*;
+import org.slf4j.*;
+import org.springframework.test.context.*;
+import org.springframework.test.context.junit4.*;
+import org.springframework.test.context.transaction.*;
+
+import javax.annotation.*;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.*;
+
+import java.util.*;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import com.leatherswan.artisticendeavors.dao.CustomerDao;
+import com.leatherswan.artisticendeavors.model.Address;
+import com.leatherswan.artisticendeavors.model.Customer;
+import com.leatherswan.artisticendeavors.model.Phone;
+
+/**
+ * using an embedded database that self initializes into a known state allows
+ * consistently reproducible tests
+ */
+
+//for embedded derby test use ContextConfiguration with datasource-jpa-embedded
+//for client derby test use ContextConfiguration with datasource-test
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:/app-spring.xml",
+		"classpath:/datasource-jpa-embedded.xml" })
+//@ContextConfiguration(locations = { "classpath:/app-spring.xml",
+//        "classpath:/datasource-production.xml" })
+@TransactionConfiguration(transactionManager = "transactionManager", defaultRollback = true)
+public class CustomerDaoTest extends
+		AbstractTransactionalJUnit4SpringContextTests {
+
+	@PersistenceContext
+	private EntityManager em;
+
+	static final Logger log = LoggerFactory.getLogger(CustomerDaoTest.class);
+
+	@Resource
+	private CustomerDao customerDao;
+
+	@Override
+	@Resource(name = "dataSource")
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	@Before
+	public void setUp() throws Exception {
+
+//		for embedded derby test comment sql lines 
+//		for client derby test uncomment sql lines
+		
+//		boolean continueOnErrorTrue = true;
+//		boolean continueOnErrorFalse = false;
+//		executeSqlScript("classpath:book_create.sql", continueOnErrorTrue);
+//		executeSqlScript("classpath:book_insert.sql", continueOnErrorFalse);
+//		executeSqlScript("classpath:user_create.sql", continueOnErrorTrue);
+//		executeSqlScript("classpath:user_insert.sql", continueOnErrorFalse);
+
+		// provide addresses and phones for inserted customers
+
+		outputLogStatus("pre_SETUP");
+
+		Customer customerConor = customerDao.findCustomerByUsername("credmond");
+		if (customerConor != null) {
+			customerConor.addAddress(new Address.Builder()
+					.customer(customerConor).name("Conor Redmond")
+					.street("9999 Belview Ave").city("Seattle").state("WA")
+					.zip("98052").isBillingAddress(false).build());
+			customerConor.addPhoneNumber(new Phone.Builder()
+					.customer(customerConor).label("HOME")
+					.number("123-555-6789").build());
+			customerConor.addPhoneNumber(new Phone.Builder()
+					.customer(customerConor).label("CELL")
+					.number("555-555-1212").build());
+		}
+
+		Customer customerJohn = customerDao.findCustomerByUsername("jsmith");
+		if (customerJohn != null) {
+			customerJohn.addAddress(new Address.Builder()
+					.customer(customerJohn).name("John D. Smith")
+					.street("123 Main St").city("Kirkland").state("WA")
+					.zip("98034").isBillingAddress(true).build());
+		}
+
+		outputLogStatus("post_SETUP");
+	}
+
+	public void outputLogStatus(String string) {
+		log.info("TEST " + string + ": ");
+		log.info("#Customers("
+		+ customerDao.countAllCustomers() + ") #Addresses("
+				+ customerDao.countAllAddresses() + ") #Phones("
+				+ customerDao.countAllPhones() + ") #CartItems("
+				+ customerDao.countAllCartItems() + ")");
+	}
+
+	@Test
+	public void createCustomer() {
+		String username = "newKid";
+		String password = "diKnew";
+		String phoneType1 = "HOME";
+		String phoneNum1 = "999-555-1212";
+		String phoneType2 = "CELL";
+		String phoneNum2 = "998-555-9999";
+
+		Customer newCustomer = new Customer.Builder().username(username)
+				.password(password).firstName("first").lastName("last")
+				.activeSince(new Date()).build();
+
+		List<Phone> phoneNumbers = new LinkedList<Phone>();
+		phoneNumbers.add(new Phone(newCustomer, phoneType1, phoneNum1));
+		phoneNumbers.add(new Phone(newCustomer, phoneType2, phoneNum2));
+		newCustomer.setPhoneNumbers(phoneNumbers);
+
+		outputLogStatus("pre_createCustomer");
+
+		Customer savedUser = customerDao.saveCustomer(newCustomer);
+		log.info("saved " + savedUser);
+
+		Customer foundCustomer = customerDao.findCustomerByUsername(username);
+
+		log.info("found " + foundCustomer);
+		assertNotNull(foundCustomer);
+		assertThat(foundCustomer.getUsername(), is(username));
+		assertThat(foundCustomer.getFirstName(), is("first"));
+		assertThat(foundCustomer.getLastName(), is("last"));
+
+		outputLogStatus("post_createCustomer");
+	}
+
+	@Test
+	public void readCustomer() {
+		Customer customer = customerDao.findCustomerByUsername("credmond");
+		log.info("foundUser " + customer);
+		assertNotNull(customer);
+		assertNotNull(customer.getId());
+
+		outputLogStatus("readCustomer");
+	}
+
+	@Test
+	public void updateCustomerLastName() {
+		// load user and check initial state
+		String username = "jsmith";
+		String updateLastName = "Smith2";
+		Customer jsmith = customerDao.findCustomerByUsername(username);
+		assertThat(jsmith.getLastName(), is("Smith"));
+
+		outputLogStatus("pre_updateCustomerLastName");
+		// update user!
+
+		jsmith.setLastName(updateLastName);
+		customerDao.updateCustomer(jsmith);
+
+		// verify user was updated
+		Customer jsmith2 = customerDao.findCustomerByUsername(username);
+
+		assertThat(jsmith2.getLastName(), is(updateLastName));
+
+		outputLogStatus("post_updateCustomerLastName");
+	}
+
+	@Test
+	public void deleteCustomer() {
+
+		String username = "jsmith";
+
+		// verify user is already in the database
+		Customer foundCustomer = customerDao.findCustomerByUsername(username);
+		assertNotNull(foundCustomer);
+		outputLogStatus("pre_deleteCustomer");
+
+		// delete user
+		customerDao.deleteCustomer(foundCustomer);
+
+		// lookup the user im the database
+		List<Customer> matchingUsers = em
+				.createQuery(
+						"SELECT c FROM Customer c "
+								+ "WHERE c.username LIKE :findcustomer",
+						Customer.class).setParameter("findcustomer", username)
+				.getResultList();
+		assertEquals(matchingUsers.size(), 0);
+
+		List<Phone> matchingPhones = customerDao.findPhonesByCustomer(foundCustomer);
+		assertEquals(matchingPhones.size(), 0);
+		List<Address> matchingAddress = customerDao.findAddressesByCustomer(foundCustomer);
+		assertEquals(matchingAddress.size(), 0);
+
+		outputLogStatus("post_deleteCustomer");
+	}
+
+	@Test
+	public void findCustomerByUsername() {
+
+		Customer credmond = customerDao.findCustomerByUsername("credmond");
+		log.info("foundUser " + credmond);
+		assertNotNull(credmond);
+		assertEquals("Conor Redmond", credmond.getAddresses().get(0).getName());
+		assertEquals("Conor", credmond.getFirstName());
+
+		outputLogStatus("findCustomerByUsername");
+	}
+
+	@Test
+	public void findAll() {
+		log.info("userDao " + customerDao);
+		List<Customer> users = customerDao.findAllCustomers();
+		assertNotNull(users);
+		assertTrue(users.size() > 0);
+//		users.forEach(System.out::println);
+
+		List<Phone> phones = customerDao.findAllPhones();
+		assertNotNull(phones);
+		assertTrue(phones.size() > 0);
+//		phones.forEach(System.out::println);
+
+		outputLogStatus("findAll");
+	}
+
+}

@@ -1,0 +1,290 @@
+@CHARSET "ISO-8859-1";
+
+/* Ye Olde Book Seller CSS style sheet */
+/* ELEMENT   SELECTS ALL:
+   .x        class="x" element(s)                            CSS1
+   #x        id="x" element(s)                               CSS1
+   p         <p> elements                                    CSS1
+   div, p    <div> elements and <p> elements                 CSS1
+   div p     <p> elements inside <div> elements              CSS1
+   div > p   <p> elements where parent is <div> element      CSS2
+   div + p   <p> elements immediately after <div> elements   CSS2
+   p ~ ul    <ul> element preceded by a <p> element          CSS3 */
+.formfield {
+	
+}
+
+.errors {
+	color: red;
+	font-size: small;
+}
+
+.error {
+	color: red;
+}
+
+* {
+	margin: 0;
+}
+
+.not_ready {
+	color: red;
+	font-style: italic;
+}
+
+header {
+	background-color: black;
+	color: white;
+	text-align: center;
+	padding: 5px;
+}
+
+nav {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	/*		background-image:url(LeatherSwanLogoPlay.jpg);
+  background: #E3CAA1;
+	opacity: 1.0; */
+	filter: alpha(opacity = 100); /* For IE8 and earlier */
+	font-family: 'Lucida Grande', 'Helvetica Neue', Helvetica, Arial,
+		sans-serif;
+	padding: 10px 20px 20px;
+	font-size: 16px;
+	text-align: center;
+}
+
+nav ul ul {
+	display: none;
+}
+
+nav ul li:hover>ul {
+	display: block;
+}
+
+nav ul {
+	background: #efefef;
+	background: linear-gradient(top, #AC1EE6 0%, #2B193A 100%);
+	background: -moz-linear-gradient(top, #AC1EE6 0%, #2B193A 100%);
+	background: -webkit-linear-gradient(top, #AC1EE6 0%, #2B193A 100%);
+	box-shadow: 0px 0px 9px rgba(0, 0, 0, 0.15);
+	padding: 0 20px;
+	border-radius: 10px;
+	list-style: none;
+	position: relative;
+	display: inline-table;
+}
+
+nav ul:after {
+	content: "";
+	clear: both;
+	display: block;
+}
+
+nav ul li {
+	float: left;
+}
+
+nav ul li:hover {
+	background: #4b545f;
+	background: linear-gradient(top, #4f5964 0%, #5f6975 40%);
+	background: -moz-linear-gradient(top, #4f5964 0%, #5f6975 40%);
+	background: -webkit-linear-gradient(top, #4f5964 0%, #5f6975 40%);
+}
+
+nav ul li:hover a {
+	color: #fff;
+}
+
+nav ul li a {
+	display: block;
+	padding: 5px 20px;
+	color: #9AC9F3;
+	text-decoration: none;
+}
+
+nav ul ul {
+	background: #5f6975;
+	border-radius: 0px;
+	padding: 0;
+	position: absolute;
+	top: 100%;
+}
+
+nav ul ul li {
+	float: none;
+	border-top: 1px solid #6b727c;
+	border-bottom: 1px solid #575f6a;
+	position: relative;
+}
+
+nav ul ul li a {
+	padding: 5px 20px;
+	color: #fff;
+}
+
+nav ul ul li a:hover {
+	background: #4b545f;
+}
+
+.text50 {
+	line-height: 30px;
+	width: 45%;
+	float: left;
+	padding: 5px;
+	margin: 0;
+	z-index: 1;
+}
+
+.image50 {
+	display: inline;
+	text-align: center;
+	/*	 background-color: #eeeeee;*/
+	height: 95%;
+	float: left;
+	padding: 5px;
+	margin: 0;
+	z-index: 1;
+}
+
+.show_addresses {
+	display: block;
+	margin: 15px;
+	padding: 15px;
+	border: 2px solid #0000ff;
+	height: auto;
+	width: auto;
+	float: left;
+	text-align: left;
+}
+
+.frame {
+	/*	 margin: 5px;
+     padding: 5px;
+     border: 2px solid #0000ff; */
+	height: 300px;
+	width: 95%;
+	float: left;
+	text-align: center;
+	/*     overflow: scroll;
+     /*background-color: #F5F5F5;*/
+}
+/* http://www.the-art-of-web.com/css/textoverimage/ */
+.frame-back {
+	/*     background-color: #ffffff;*/
+	opacity: 0.8;
+	position: relative;
+	left: 0px;
+	top: 0px;
+	z-index: -1;
+}
+
+.frame-back img {
+	opacity: 0.4;
+	background-position: 0% 0%;
+	-webkit-transition: 0.5s;
+	-moz-transition: 0.5s;
+	-o-transition: 0.5s;
+	-ms-transition: 0.5s;
+}
+
+.frame-back img:hover, .frame-back img:focus:after {
+	background-position: 100% 100%;
+}
+
+.img {
+	/*     background-color: #eeeeee;*/
+	margin: 5px;
+	padding: 5px;
+	border: 2px solid #0000ff;
+	height: 400px;
+	width: 200px;
+	float: left;
+	text-align: center;
+	overflow: scroll;
+}
+
+.frame img {
+	display: inline;
+	margin: 5px;
+	border: 2px solid #ffffff;
+}
+
+.frame a:hover img {
+	border: 2px solid #0000ff;
+}
+
+.desc {
+	/*     background-color: #ffffff; */
+	display: inline;
+	text-align: center;
+	font-weight: normal;
+	width: 250px;
+	margin: 5px;
+	z-index: 1;
+}
+
+#logo {
+	font: 45px "Comic Sans MS", cursive, sans-serif;
+	font-weight: bold;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	border: none;
+	width: 100%;
+	height: 100%;
+	font: 18px/25px 'AauxProRegular', helvetica, sans-serif;
+	font-size: 100%;
+	background-image: url("Ye Olde Bookstore Sunset 2.jpg");
+	background-position: 0% 0%;
+	-webkit-transition: background-position 35.0s 2s;
+	transition: background-position 35.0s 2s;
+	color: #626262;
+}
+
+body:hover {
+	background-position: 100% 0%;
+}
+
+main {
+	background-color: #F5F5F5;
+}
+
+.wrapper {
+	position: relative;
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+	margin: 0 auto -142px;
+	/* the bottom margin is the negative value of the footer's height */
+	width: 80%;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 0;
+}
+
+tbody tr:nth-child(odd) {
+	background-color: #ccc;
+}
+
+.footer {
+	height: 142px; /* .push must be the same height as .footer */
+	width: 100%;
+	color: black;
+	clear: both;
+	text-align: center;
+	padding: 5px;
+}
+
+.push {
+	height: 142px; /* .push must be the same height as .footer */
+	width: 100%;
+	background-color: #FFFFCC;
+	color: black;
+	clear: both;
+	text-align: center;
+	padding: 5px;
+}

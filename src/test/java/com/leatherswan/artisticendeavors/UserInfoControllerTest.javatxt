@@ -1,0 +1,125 @@
+package com.leatherswan.bookstore;
+
+import static org.junit.Assert.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.*;
+
+import java.util.UUID;
+
+import javax.inject.Inject;
+
+import org.junit.*;
+import org.junit.runner.RunWith;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+//import org.springframework.test.web.servlet.result.MockMvcResultHandler;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.leatherswan.bookstore.app.UserController;
+import com.leatherswan.bookstore.model.User;
+
+@WebAppConfiguration
+@ContextConfiguration(locations = 
+		{"classpath*:*.xml",
+			"file:src/main/webapp/resources/data/books.xml"
+		})
+@ComponentScan(basePackages = {
+		"com.leatherswan.bookapp"
+})
+
+@RunWith(MockitoJUnitRunner.class)
+public class UserInfoControllerTest {
+    
+    private MockMvc mockMvc;
+    private MockHttpSession mockSession;
+    
+    @Inject 
+    protected WebApplicationContext wac;
+    
+    @Before
+    public void setUp() throws Exception {
+        mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
+//        MockitoAnnotations.initMocks(testClass);
+        mockSession = new MockHttpSession(null, UUID.randomUUID().toString());
+    }
+
+    @Test
+    public void testShowForm() throws Exception {
+        mockMvc.perform(get("/userLogin"))
+               .andExpect(status().isOk())
+               .andExpect(view().name("loginView"))
+               .andExpect(model().attributeExists("userInfo"));
+    }
+
+    @Test
+    public void testProcessForm() throws Exception {
+        mockMvc.perform(post("/userLogin").session(mockSession))
+               .andExpect(status().isOk());
+        
+        assertNotNull(mockSession.getAttribute("user"));
+        assertTrue(mockSession.getAttribute("user") instanceof User);
+    }
+
+    private static final String testName = "momamia";
+    private static final String testPassword = "forever";
+    private static final String testEmail = "theMom@yourHome.net";
+    private static final String testPhoneNumber = "123-987-0987";
+    
+    private static final String badPhoneNumber = "543-543-543";
+    private static final String badEmail = "java@edu";
+    
+    
+    @Test
+    public void testProcessFormWithData() throws Exception {
+        MockHttpServletRequestBuilder srb = post("/userLogin").session(mockSession)
+                                                     .param("username", testName)
+                                                     .param("password", testPassword)
+                                                     .param("email", testEmail)
+                                                     ;
+        mockMvc.perform(srb)
+               .andExpect(status().isOk());
+        
+        assertNotNull(mockSession.getAttribute("user"));
+        assertTrue(mockSession.getAttribute("user") instanceof User);
+        
+        User user = (User) mockSession.getAttribute("user");
+        assertEquals(user.getUsername(), testName);
+        assertEquals(user.getEmail(), testEmail);
+    }
+
+    @Test
+    public void testShowUserData() throws Exception {
+    	User user = new User();
+        user.setUsername(testName);
+        user.setPassword(testPassword);
+        user.setEmail(testEmail);
+        mockSession.setAttribute("user", user);
+        mockMvc.perform(get("/view_account").session(mockSession))
+               .andExpect(status().isOk())
+               .andExpect(view().name("accountView"))
+               .andExpect(model().attributeExists("userInfo"))
+               .andExpect(model().attribute("user", user))
+               .andExpect(model().attribute("user", hasProperty("username", is(testName))))
+               .andExpect(model().attribute("user", hasProperty("password", is(testPassword))))
+               .andExpect(model().attribute("user", hasProperty("email", is(testEmail))))
+//               .andExpect(model().attribute("userInfo", hasProperty("zipCode", is(testZipCode))))
+               ;
+    }
+    
+    @Test
+    public void testBadUserData() throws Exception {
+        MockHttpServletRequestBuilder srb = post("/userLogin").session(mockSession)
+                									 .param("phoneNumber", badPhoneNumber)
+                                                     .param("email", badEmail);
+        assertNull(mockSession.getAttribute("contactInfo"));
+    }
+    
+}

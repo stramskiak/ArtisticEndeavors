@@ -1,0 +1,194 @@
+package com.leatherswan.bookstore;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import com.leatherswan.bookstore.dao.BookDao;
+import com.leatherswan.bookstore.model.Author;
+import com.leatherswan.bookstore.model.Book;
+import com.leatherswan.bookstore.model.Genre;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+
+import javax.annotation.Resource;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.sql.DataSource;
+
+import static org.junit.Assert.*;
+
+/**
+ * repeatable
+ *
+ */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = { "classpath:/app-spring.xml",
+ "classpath:/datasource-jpa-embedded.xml"})
+@TransactionConfiguration(transactionManager = "transactionManager",
+defaultRollback = true)
+public class BookDaoEmbeddedTest extends AbstractTransactionalJUnit4SpringContextTests {
+
+	@PersistenceContext
+	private EntityManager em;
+
+	static final Logger log = LoggerFactory.getLogger(BookDaoEmbeddedTest.class);
+
+	@Resource
+	private BookDao bookDao;
+
+	@Override
+	@Resource(name = "dataSource")
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+
+	@Test
+	public void findBookByIsbn() {
+
+		String findIsbn = "978-0441569595";
+		String expectedTitle = "Neuromancer";
+		log.info("finding Book " + findIsbn);
+		Book book = bookDao.findBookByIsbn(findIsbn);
+		log.info("foundBook " + book);
+		assertNotNull(book);
+		assertEquals(expectedTitle, book.getTitle());
+	}
+
+	@Test
+	public void createBook() {
+		String newIsbn = "987-6543212345";
+		String expectedTitle = "btest";
+		Author author = new Author();
+		author.setAuthorName("Bob");
+		List<Author> authors = new LinkedList<Author>();
+		authors.add(author);
+		Genre genre = new Genre();
+		genre.setGenreType("scifi");
+		Book book = new Book();
+		book.setIsbn(newIsbn);
+		book.setTitle(expectedTitle);
+		book.setAuthors(authors);
+		book.setGenre(genre);
+		book.setDescription("Test");
+		book.setPrice(99.99);
+
+		bookDao.saveBook(book);
+
+		Book foundBook = bookDao.findBookByIsbn(newIsbn);
+		assertNotNull(foundBook);
+		assertEquals(expectedTitle, foundBook.getTitle());
+
+	}
+
+	@Test
+	public void readBook() {
+
+		String isbn = "978-0553293357";
+		Book book = bookDao.findBookByIsbn(isbn);
+		log.info("foundBook " + book);
+		assertNotNull(book);
+		assertNotNull(book.getAuthors());
+
+	}
+
+	@Test
+	public void updateNameOfBook() {
+		String isbn = "978-0553293357";
+		String newTitle = "Found Nation";
+		String originalTitle = (String) em
+				.createQuery(
+						"SELECT b.title FROM Book b WHERE b.isbn LIKE :findisbn")
+				.setParameter("findisbn", isbn).getSingleResult();
+		//
+		// check initial state
+		//
+		assertEquals((String) originalTitle, "Foundation");
+
+		Book book = new Book.Builder().isbn(isbn).title(newTitle).build();
+		//
+		// update !
+		//
+		bookDao.updateBook(book);
+
+		//
+		// verify results
+		//
+
+		String updatedTitle = (String) em
+				.createQuery(
+						"SELECT b.title FROM Book b WHERE b.isbn LIKE :findisbn")
+				.setParameter("findisbn", isbn).getSingleResult();
+
+		assertEquals(updatedTitle, newTitle);
+	}
+
+	@Test
+	public void deleteTempBook() {
+
+		//
+		// Create a book
+		//
+		String isbn = "111-2223334445";
+		String ti = "unittest";
+		String de = "To boldly go where others fear to tread, take an angel.";
+		Author author = new Author();
+		author.setAuthorName("Stramski");
+		List<Author> au = new LinkedList<Author>();
+		au.add(author);
+		Genre ge = new Genre();
+		ge.setGenreType("non-fiction");
+		double pr = 99.99;
+		String pu = "NewAge";
+		double di = 0.0;
+
+		Book book = new Book.Builder().isbn(isbn).title(ti).description(de)
+				.price(pr).publisher(pu).discount(di)
+				.build();
+
+		bookDao.saveBook(book);
+
+		//
+		// verify it was persisted
+		//
+		assertNotNull((Integer) em
+				.createQuery(
+						"SELECT b.id " + "FROM Book b "
+								+ "WHERE b.isbn LIKE :findisbn")
+				.setParameter("findisbn", book.getIsbn()).getSingleResult());
+
+		//
+		// delete that book based on isbn
+		//
+//		bookDao.deleteBook(book.getIsbn());
+		bookDao.deleteBook(book);
+
+		//
+		// verify it's gone
+		//
+		@SuppressWarnings("unchecked")
+		List<String> matchingBooks = (List<String>) em
+				.createQuery(
+						"SELECT b.title FROM Book b "
+								+ "WHERE b.isbn LIKE :findisbn")
+				.setParameter("findisbn", book.getIsbn()).getResultList();
+		assertEquals(matchingBooks.size(), 0);
+	}
+
+	@Test
+	public void findAll() {
+		log.info("bookDao " + bookDao);
+		List<Book> books = bookDao.findAllBooks();
+		assertNotNull(books);
+		assertTrue(books.size() > 0);
+		books.forEach(System.out::println);
+	}
+
+}

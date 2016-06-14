@@ -1,0 +1,50 @@
+package com.leatherswan.bookstore;
+
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.leatherswan.bookstore.model.Book;
+
+public class BookTests {
+
+	private Book book;
+	
+	private static double CURRENCY_DELTA = 0.005;
+	
+	@Before
+	public void setUp() throws Exception {
+		book = new Book();
+	}
+	
+	@Test
+	public void testSetAndGetISBN() {
+		String testISBN = "978-0441569595";
+		assertNull(book.getIsbn());
+		book.setIsbn(testISBN);
+		assertEquals(testISBN, book.getIsbn());
+	}
+	@Test
+	public void testSetAndGetTitle() {
+		String testTitle = "Neuromancer";
+		assertNull(book.getTitle());
+		book.setTitle(testTitle);
+		assertEquals(testTitle, book.getTitle());
+	}
+	@Test
+	public void testSetAndGetAuthor() {
+		String testAuthor = "William Gibson";
+		assertNull(book.getAuthor());
+		book.setAuthor(testAuthor);
+		assertEquals(testAuthor, book.getAuthor());
+	}
+	@Test
+	public void testSetAndGetPrice() {
+		double testPrice = 8.99;
+		assertEquals(book.getPrice(), 0.0, CURRENCY_DELTA);
+		book.setPrice(testPrice);
+		assertEquals(testPrice, book.getPrice(), CURRENCY_DELTA);
+	}
+
+}

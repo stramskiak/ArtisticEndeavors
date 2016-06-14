@@ -1,0 +1,8 @@
+.settings/
+target/
+build/
+/git/
+/bin/
+/git/
+
+derbydata/

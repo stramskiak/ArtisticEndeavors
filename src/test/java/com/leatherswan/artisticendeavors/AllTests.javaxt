@@ -1,0 +1,14 @@
+package com.leatherswan.bookstore;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+@RunWith(Suite.class)
+@SuiteClasses({ AddressInfoControllerTests.class, BookTests.class,
+		CreditCardInfoControllerTests.class, ShoppingCartControllerTests.class,
+		SimpleBookManagerTests.class, UserInfoControllerTest.class })
+public class AllTests {
+
+	
+}
